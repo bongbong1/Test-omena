@@ -1,0 +1,141 @@
+
+*** Settings ***
+Suite Setup       Set up suite
+Test Setup        Set up test    Firefox    https://test2.omenahotels.com/en/booking/
+Test Teardown     Close Driver and Exit    ${DRV}
+Force Tags        basic
+Resource          ../mainResource.txt
+
+*** Variables ***
+${DATAFILE}       ${CURDIR}/../SheetData/Flow1.xls
+
+*** Test Cases ***
+TC-001-Reserve 1 standard room for 2 guests
+    [Tags]    001
+    [Timeout]    25 minutes
+    Set Staying Time    ${DRV}    19.11.2019    20.11.2019
+    Select City/Hotel    ${DRV}    7
+    Click Add Room    ${DRV}
+    Add Some Guests to a Room    ${DRV}    1    1
+    Proceed After Adding Rooms    ${DRV}    4
+    Fill Contact Info    ${DRV}    ${DATAFILE}    Contact    3
+    Accept Term and Proceed to Payment    ${DRV}
+    Pass Dummy Payment Phase    ${DRV}
+    Fill Contact Info Part 2    ${DRV}    ${DATAFILE}    Contact    3
+    Fill Finnish Guest Info    ${DRV}    ${DATAFILE}    Guest    1    1
+    Fill Finnish Guest Info    ${DRV}    ${DATAFILE}    Guest    2    2
+    Save Guest Info    ${DRV}
+    Click Show Confirmation    ${DRV}
+    Back to Page 3 from Page Receipt    ${DRV}
+
+TC-002-Reserve 7 standard rooms for 14 guests
+    [Tags]    002    max
+    [Timeout]    45 minutes
+    Set Staying Time    ${DRV}    04.10.2019    05.10.2019
+    Select City/Hotel    ${DRV}    13
+    Add Multiple Rooms    ${DRV}    7
+    Add Some Guests to Some Rooms    ${DRV}    1    7
+    Proceed After Adding Rooms    ${DRV}    4
+    Fill Contact Info    ${DRV}    ${DATAFILE}    Contact    4
+    Accept Term and Proceed to Payment    ${DRV}
+    Pass Dummy Payment Phase    ${DRV}
+    Fill Contact Info Part 2    ${DRV}    ${DATAFILE}    Contact    3
+    Fill Finnish Guest Info    ${DRV}    ${DATAFILE}    Guest    1    1
+    Fill Finnish Guest Info    ${DRV}    ${DATAFILE}    Guest    2    2
+    Add multiple Guests    ${DRV}    12
+    Save Guest Info    ${DRV}
+    Click Show Confirmation    ${DRV}
+    Back to Page 3 from Page Receipt    ${DRV}
+
+TC-003-Create reservation from booking UI then cancel it from Admin view
+    [Tags]    003
+    [Timeout]    35 minutes
+    Set Staying Time    ${DRV}    12.6.2020    13.6.2020
+    Select City/Hotel    ${DRV}    15
+    Click Add Room    ${DRV}
+    Add Some Guests to a Room    ${DRV}    1    1
+    Add Some Breakfasts to a Room    ${DRV}    2    1
+    Proceed After Adding Rooms    ${DRV}    4
+    Fill Contact Info    ${DRV}    ${DATAFILE}    Contact    1
+    Accept Term and Proceed to Payment    ${DRV}
+    Pass Dummy Payment Phase    ${DRV}
+    Fill Contact Info Part 2    ${DRV}    ${DATAFILE}    Contact    1
+    Fill non-Finnish Guest Info    ${DRV}    ${DATAFILE}    Guest    3    1
+    Fill Finnish Guest Info    ${DRV}    ${DATAFILE}    Guest    2    2
+    Save Guest Info    ${DRV}
+    ${reservationCode}=    Get Reservation Code    ${DRV}
+    Click Show Confirmation    ${DRV}
+    Back to Page 3 from Page Receipt    ${DRV}
+    Close Driver and Exit    ${DRV}    ${False}
+    Set up test    Firefox    https://test2.omenahotels.com/management/#/login
+    Log In Nelson Admin With Default    ${DRV}
+    Go to Reservations Page in Admin GUI    ${DRV}
+    Search For Reservation by reservationCode    ${DRV}    ${reservationCode}
+    Cancel Reservation After Finishing Search and Check Label Cancelled    ${DRV}
+    Log Out Nelson Admin    ${DRV}
+
+TC-004-Reserve 2 rooms with 3 guests each, then change the reservation
+    [Tags]    004    change
+    [Timeout]    45 minutes
+    Set Staying Time    ${DRV}    8.11.2019    9.11.2019
+    Select City/Hotel    ${DRV}    6
+    Expand Standard Room    ${DRV}
+    Add Multiple Rooms    ${DRV}    2
+    Add Some Guests to Some Rooms    ${DRV}    2    2
+    Proceed After Adding Rooms    ${DRV}    4
+    Fill Contact Info    ${DRV}    ${DATAFILE}    Contact    4
+    Accept Term and Proceed to Payment    ${DRV}
+    Pass Dummy Payment Phase    ${DRV}
+    Fill Contact Info Part 2    ${DRV}    ${DATAFILE}    Contact    3
+    Fill Finnish Guest Info    ${DRV}    ${DATAFILE}    Guest    1    1
+    Fill Finnish Guest Info    ${DRV}    ${DATAFILE}    Guest    2    2
+    Add multiple Guests    ${DRV}    4
+    Save Guest Info    ${DRV}
+    Click Change Reservation    ${DRV}
+    Remove room from shopping basket    ${DRV}
+    Remove Some Guests from a Room    ${DRV}    2    1
+    Click Update Reservation after Changes    ${DRV}
+    Wait Until Keyword Succeeds    180s    9s    Click Complete Payment    ${DRV}
+    Run Keyword And Ignore Error    Save Guest Info    ${DRV}
+    Click Show Confirmation    ${DRV}
+    Back to Page 3 from Page Receipt    ${DRV}
+
+TC-005-Reserve 1 single room
+    [Tags]    005
+    Set Staying Time    ${DRV}    03.12.2019    04.12.2019
+    Select City/Hotel    ${DRV}    4
+    Check Text    ${DRV}    //*[@id="contents"]/div[1]/div/div[1]/div[1]/p    Single New    ${True}
+    Click Add Single Room    ${DRV}
+    Check Text    ${DRV}    //*[@id="summary"]/div/div/div/div/ul/li/div[1]/span[1]    Single x 1 night(s)    ${True}
+    Proceed After Adding Rooms    ${DRV}    4
+    Fill Contact Info Without choose Country    ${DRV}    ${DATAFILE}    Contact    3
+    Accept Term and Proceed to Payment    ${DRV}
+    Pass Dummy Payment Phase    ${DRV}
+    Fill Contact Info Part 2    ${DRV}    ${DATAFILE}    Contact    3
+    Save Guest Info    ${DRV}
+    Click Show Confirmation    ${DRV}
+    Check Text    ${DRV}    //*[@id="booking-content"]/div[2]/table[1]/tbody/tr[2]/td[2]    Single    ${True}
+    Back to Page 3 from Page Receipt    ${DRV}
+
+TC-006-Reserve 1 room 1 day, change reservation extend day
+    [Tags]    006    change
+    [Timeout]    25 minutes
+    Set Staying Time    ${DRV}    25.12.2019    26.12.2019
+    Select City/Hotel    ${DRV}    7
+    Click Add Room    ${DRV}
+    Proceed After Adding Rooms    ${DRV}    4
+    Fill Contact Info Without choose Country    ${DRV}    ${DATAFILE}    Contact    3
+    Accept Term and Proceed to Payment    ${DRV}
+    Pass Dummy Payment Phase    ${DRV}
+    Fill Contact Info Part 2    ${DRV}    ${DATAFILE}    Contact    3
+    Fill Finnish Guest Info    ${DRV}    ${DATAFILE}    Guest    1    1
+    Save Guest Info    ${DRV}
+    Click Change Reservation    ${DRV}
+    Extend Departure Day    ${DRV}    27.12.2019
+    Click Update Reservation after Changes    ${DRV}
+    Check and Close Ad    ${DRV}
+    Payment    ${DRV}
+    Pass Dummy Payment Phase    ${DRV}
+    Check and Close Ad    ${DRV}
+    Click Cancel reservation    ${DRV}
+    [Teardown]
